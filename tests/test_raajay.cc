@@ -1,4 +1,5 @@
 #include "ps/ps.h"
+//#include "ps/internal/postoffice.h"
 using namespace ps;
 
 void StartServer() {
@@ -30,7 +31,7 @@ void RunWorker() {
   }
 
   // push
-  int repeat = 50;
+  int repeat = 5;
   std::vector<int> ts; // an array to hold the time stamps of the push operations
   for (int i = 0; i < repeat; ++i) {
     // why are we pushing the same keys and values 50 times?
@@ -60,13 +61,36 @@ void RunWorker() {
   LL << "error: " << res / repeat;
 }
 
+void doIfServer() {
+    if(!IsServer()) {
+        return;
+    }
+    std::vector<Range> ranges = Postoffice::Get()->GetServerKeyRanges();
+    if(ranges.size() > 0) {
+        for(unsigned int i = 0; i < ranges.size(); i++) {
+          PS_VLOG(1) << "Key Range " << i << "  Begin: " << ranges[i].begin();
+          PS_VLOG(1) << "Key Range " << i << "  End: " << ranges[i].end();
+        }
+    } else {
+        PS_VLOG(1) << "Server ranges are empty";
+    }
+}
+
+
+void doIfScheduler() {
+    Customer* customer = Postoffice::Get()->GetCustomer(1, 1);
+}
+
 int main(int argc, char *argv[]) {
   // setup server nodes
-  StartServer();
+//  StartServer();
   // start system
   Start();
+  doIfServer(); // do some stuff if you are  server
+  doIfScheduler();
+
   // run worker nodes
-  RunWorker();
+//  RunWorker();
   // stop system
   Finalize();
   return 0;
